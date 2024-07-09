@@ -1,7 +1,7 @@
 # **Stock Market Lab Project**
 
 ### **Welcome to Stock Market Project!**
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://karma-gurung.streamlit.app)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://stockmarketlab.streamlit.app)
 
 A web application for exploring and analyzing stocks, built with Streamlit.
 
