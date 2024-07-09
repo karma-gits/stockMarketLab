@@ -13,8 +13,8 @@ def main():
         url = 'https://docs.google.com/spreadsheets/d/1yvGSBuv9TXe49AyOtx2lOV-vA5pchXAGp4_PKpne1Uw/edit?usp=sharing'
         output = 'stockPortfolio.xlsx'
         return gdown.download(url, output, quiet=False, fuzzy=True)
-    #df = pd.read_excel(download_data())
-    df = pd.read_excel("data/stockPortfolio.xlsx")
+    df = pd.read_excel(download_data())
+    #df = pd.read_excel("data/stockPortfolio.xlsx")
     
     #df.columns = ['ticker', 'entry',shares,value,'close','country','return','chg','princeChange]
     mylist = df['ticker'].unique().tolist()
