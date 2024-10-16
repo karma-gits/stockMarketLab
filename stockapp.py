@@ -12,7 +12,7 @@ import mplfinance as mpf
 import streamlit as st
 import datetime as dt
 import plotly.express as px
-import nltk_download
+import nltk
 import corpora
 
 def main(tickerHolder):
@@ -21,9 +21,16 @@ def main(tickerHolder):
     news_tables = {}
     url = finviz_url + tickerHolder
     req = Request(url=url, headers={'user-agent': 'my-app'})
-    response = urlopen(req)
-    html = BeautifulSoup(response, features='html.parser')
-    news_table = html.find(id='news-table')
+    try:
+        response = urlopen(req)
+        html = BeautifulSoup(response, features='html.parser')
+        news_table = html.find(id='news-table')
+        if not news_table:
+            st.warning(f"No news found on the {tickerHolder} ")
+            return
+    except Exception as e:
+        st.error(f"Failed to fetch data: {e}")
+        return
     news_tables[tickerHolder] = news_table
     #turn data into clean table
     parsed_data = []
