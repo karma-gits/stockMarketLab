@@ -57,7 +57,6 @@ if selected == "News":
                 stockapp.main(tickerHolder)
             except Exception as e:
                 st.error(f"No News Today for your Stock... {e}")
-                st.error("Please enter a valid ticker")
     
 if selected == "MonteCarlo":
     st.header("**Simulation Lab** 🧪⚗️👩‍🔬")
