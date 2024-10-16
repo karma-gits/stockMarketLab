@@ -44,7 +44,7 @@ def main():
         risk = st.number_input("What is the $ Risk?", 1,10000000,100)
         winRatio = st.number_input("What is the win/loss ratio?", 0.50,100.00, 4.00)
         num_simulations = st.number_input("Number ofsimulations to run?", 1,15000, 200)
-        submit = st.button(":running: Run Simulations :cook:",type="primary")
+        submit = st.button(":running: Run Simulations :cook:",type="primary",use_container_width=True)
 
         # calculate the profit
         profit = winRatio*risk
