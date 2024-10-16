@@ -14,6 +14,7 @@ import datetime as dt
 import plotly.express as px
 import nltk
 import corpora
+import textblob
 
 def main(tickerHolder):
     #scrape data from finviz
