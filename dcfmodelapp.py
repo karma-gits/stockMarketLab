@@ -231,8 +231,13 @@ def main():
         df = df/1000000
         df = df[(df.T != 0).any()]
         df.dropna(inplace=True)
-        # format columns to "y-m-d"
-        df.columns = df.columns.strftime('%Y-%m-%d')
+        # Check if the columns are datetime type
+        if pd.to_datetime(df.columns, errors='coerce').notnull().all():
+            # If they can be converted to datetime, format them
+            df.columns = pd.to_datetime(df.columns).strftime('%Y-%m-%d')
+        else:
+            # Else, just convert them to string
+            df.columns = df.columns.astype(str)
         st.dataframe(df,use_container_width=True)
 
     with st.expander("View: Financial Statements - Quatrerly (in millions)",icon="📈"):
