@@ -42,11 +42,12 @@ def main(tickerHolder):
             parsed_data.append([ticker, date, time, title])
             
     df = pd.DataFrame(parsed_data, columns=['ticker', 'date', 'time', 'Headline'])
-    df = df[df['date']=='Today'] #filter for current 'Today' data
-    df['time'] = pd.to_datetime(df.time).dt.time ## convert to corrct time format
-    #from datetime import date
-    #date_when = date.today()# to save current date to save charts
-    
+    if df.empty:
+        st.warning("No News Today for your Stock... Looks like you are missing some required data for this feature.")
+        return
+    else:
+        df = df[df['date']=='Today'] #filter for current 'Today' data
+        df['time'] = pd.to_datetime(df.time).dt.time ## convert to corrct time format    
     
     def emotionAnalysis(whole_text):
         #Get the emotion frequencies
