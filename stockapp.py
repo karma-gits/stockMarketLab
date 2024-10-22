@@ -16,47 +16,7 @@ import nltk
 import corpora
 import textblob
 
-def main(tickerHolder):
-    #scrape data from finviz
-    finviz_url = 'https://finviz.com/quote.ashx?t='
-    news_tables = {}
-    url = finviz_url + tickerHolder
-    req = Request(url=url, headers={'user-agent': 'my-app'})
-    try:
-        response = urlopen(req)
-        html = BeautifulSoup(response, features='html.parser')
-        news_table = html.find(id='news-table')
-        if not news_table:
-            st.warning(f"No news found on the {tickerHolder} ")
-            return
-    except Exception as e:
-        st.error(f"Failed to fetch data: {e}")
-        return
-    news_tables[tickerHolder] = news_table
-    #turn data into clean table
-    parsed_data = []
-
-    for ticker, news_table in news_tables.items():
-        for row in news_table.findAll('tr'):
-            title_tag = row.find('a')
-            if title_tag:
-                title = title_tag.text
-            date_data = row.td.text.split() #save all date datas
-            if len(date_data) == 1 :
-                time = date_data[0]
-            else:
-                date = date_data[0]
-                time = date_data[1]
-            parsed_data.append([ticker, date, time, title])
-            
-    df = pd.DataFrame(parsed_data, columns=['ticker', 'date', 'time', 'Headline'])
-    if df.empty:
-        st.warning("No News Today for your Stock... Looks like you are missing some required data for this feature.")
-        return
-    else:
-        df = df[df['date']=='Today'] #filter for current 'Today' data
-        df['time'] = pd.to_datetime(df.time).dt.time ## convert to corrct time format    
-    
+def main():
     def emotionAnalysis(whole_text):
         #Get the emotion frequencies
         emotions = NRCLex(whole_text).affect_frequencies
@@ -87,52 +47,113 @@ def main(tickerHolder):
             try:
                 emotionAnalysis(whole_text)
             except ValueError as e:
-                st.warning(f"No significant data to analyze: {e}")
-                
-    ## vader sentiment analysis
-    vader = SentimentIntensityAnalyzer()
-    df['VaderSentiment'] = df['Headline'].apply(lambda title: vader.polarity_scores(title)['compound'])
+                st.warning(f"No significant data to analyze: {e}")    
     
-    ## new columns with emoji 
-    df['Sentiment'] = df['VaderSentiment'].apply(lambda x: "😀😀" if x > .4 else "🙂🙂" if x > .1 else "🙂" if x > .05 else "❔" if x > -.05 else "😡" if x>-.4 else "😡😡")
-    
-    
-    tab1, tab2 = st.tabs(["📰 News Headlines Analysis 📰","Custom Text Analysis"])
-    with tab2:
+    # main brain Starts here
+    tickerHolder = str.upper(st.text_input("**Enter a Ticker to Analyze**",placeholder="Enter a Ticker Symbol! (*Not for otc stocks)"))
+    if tickerHolder == "":
         # Custom Text Analysis
-        st.subheader(f":red[ Custom Text Analysis 😀😈]",divider='red')
+        st.subheader(f":red[ Custom Text Sentiment Analysis 😀😈]",divider='red')
         with st.form("customTextForm"):
             customText = st.text_area("Enter your text here")
             if st.form_submit_button("Analyze", use_container_width=True,type='primary'):
                 overallAnalysis(customText,topWords=100)
+    else:        
+        #scrape data from finviz
+        finviz_url = 'https://finviz.com/quote.ashx?t='
+        news_tables = {}
+        url = finviz_url + tickerHolder
+        req = Request(url=url, headers={'user-agent': 'my-app'})
+        try:
+            response = urlopen(req)
+            html = BeautifulSoup(response, features='html.parser')
+            news_table = html.find(id='news-table')
+            if not news_table:
+                st.warning("No news table found on the page.")
+
+        except Exception as e:
+            st.error("Please try again! with a valid ticker!",icon="⚠️")
+            st.error(f"Failed to fetch data: {e}")
+            
+        news_tables[tickerHolder] = news_table
+        #turn data into clean table
+        parsed_data = []
+
+        for ticker, news_table in news_tables.items():
+            for row in news_table.findAll('tr'):
+                title_tag = row.find('a')
+                if title_tag:
+                    title = title_tag.text
+                date_data = row.td.text.split() #save all date datas
+                if len(date_data) == 1 :
+                    time = date_data[0]
+                else:
+                    date = date_data[0]
+                    time = date_data[1]
+                parsed_data.append([ticker, date, time, title])
+
+        df = pd.DataFrame(parsed_data, columns=['ticker', 'date', 'time', 'Headline'])
+        if df.empty:
+            st.warning("No News Today for your Stock... Looks like you are missing some required data for this feature.")
+        else:
+            df = df[df['date']=='Today'] #filter for current 'Today' data
+            df['time'] = pd.to_datetime(df.time).dt.time ## convert to corrct time format    
+            if df.empty:
+                st.warning(f"{tickerHolder} - No news available for today.",icon="⚠️")
+
+        ## vader sentiment analysis
+        vader = SentimentIntensityAnalyzer()
+        df['VaderSentiment'] = df['Headline'].apply(lambda title: vader.polarity_scores(title)['compound'])
+
+        ## new columns with emoji 
+        df['Sentiment'] = df['VaderSentiment'].apply(lambda x: "😀😀" if x > .4 else "🙂🙂" if x > .1 else "🙂" if x > .05 else "❔" if x > -.05 else "😡" if x>-.4 else "😡😡")
+
+
+        tab1, tab2 = st.tabs(["📰 News Headlines Analysis 📰","Custom Text Analysis"])
+        with tab2:
+            # Custom Text Analysis
+            st.subheader(f":red[ Custom Text Sentiment Analysis 😀😈]",divider='red')
+            with st.form("customTextForm"):
+                customText = st.text_area("Enter your text here")
+                if st.form_submit_button("Analyze", use_container_width=True,type='primary'):
+                    overallAnalysis(customText,topWords=100)
+
+        with tab1:
+            
+        
+            if not df.empty:
+                ### News headlines
+                st.subheader(f':red[📰 News Headlines 📰-] {tickerHolder} | {dt.datetime.now().date()}',divider='red')
+                #st.dataframe(df[['time','Headline','Emoji']].set_index('time'),use_container_width=True) #prints tickers dataframe
+                with st.container(height=450,border=True):
+                    st.table(df[['time','Headline','Sentiment']].set_index('time')) #prints tickers dataframe
                 
-    with tab1:
-        ### News headlines
-        st.subheader(f':red[📰 News Headlines 📰-] {tickerHolder} | {dt.datetime.now().date()}',divider='red')
-        #st.dataframe(df[['time','Headline','Emoji']].set_index('time'),use_container_width=True) #prints tickers dataframe
-        with st.container(height=450,border=True):
-            st.table(df[['time','Headline','Sentiment']].set_index('time')) #prints tickers dataframe
+                # Analyze Headlines
+                st.subheader(':red[📰 Overall Headlines Analysis 😀😈]',divider='red')
+                # Overall News Emotional Analysis
+                # Concatenate all rows from the Headline column
+                whole_text = df['Headline'].str.cat(sep='. ')
+                try:
+                    overallAnalysis(whole_text)
+                except Exception as e:
+                     st.error(f"An unexpected error occurred: {e}",icon="⚠️")
+            else:
+                st.error(f"{tickerHolder} - No News Headlines available to analyze.",icon="⚠️")
+            
+            # Stock data from Yahoo Finance
+            st.subheader(f":red[ 📈 {tickerHolder} - YTD Daily Chart 📉 ]",divider='red')
+            security = yf.Ticker(tickerHolder)
+            data  = security.history(period='ytd',interval='1d')
+            data  = data [['Open', 'High', 'Low', 'Close', 'Volume']]
+            highs = data['High'][:-1].max()
+            lows = data['Low'][:-1].min()
+            # Plot the candlestick chart
+            #fig2,ax1 = mpf.plot(data, type='candle',style='charles', mav=(10,20,50), 
+            #                   hlines=dict(hlines=[highs,(highs+lows)/2,lows],colors=['g','gray','r'],linestyle='--'),
+            #                   volume=True, returnfig=True)
 
-
-        st.subheader(':red[📰 Overall Headlines Analysis 😀😈]',divider='red')
-        # Overall News Emotional Analysis
-        # Concatenate all rows from the Headline column
-        whole_text = df['Headline'].str.cat(sep='. ')
-        overallAnalysis(whole_text)
-          # Stock data from Yahoo Finance
-        st.subheader(f":red[ 📈 {tickerHolder} - YTD Daily Chart 📉 ]",divider='red')
-        security = yf.Ticker(tickerHolder)
-        data  = security.history(period='ytd',interval='1d')
-        data  = data [['Open', 'High', 'Low', 'Close', 'Volume']]
-        highs = data['High'][:-1].max()
-        lows = data['Low'][:-1].min()
-        # Plot the candlestick chart
-        #fig2,ax1 = mpf.plot(data, type='candle',style='charles', mav=(10,20,50), 
-        #                   hlines=dict(hlines=[highs,(highs+lows)/2,lows],colors=['g','gray','r'],linestyle='--'),
-        #                   volume=True, returnfig=True)
-
-        fig2,ax1 = mpf.plot(data, type='candle',style='yahoo', mav=(10,20,50), 
-                           hlines=dict(hlines=[highs,(highs+lows)/2,lows],colors=['r','gray','g'],linestyle='--'),
-                           volume=True, returnfig=True)
-        st.pyplot(fig2.figure)    # Show the plot in Streamlit
+            fig2,ax1 = mpf.plot(data, type='candle',style='yahoo', mav=(10,20,50), 
+                               hlines=dict(hlines=[highs,(highs+lows)/2,lows],colors=['r','gray','g'],linestyle='--'),
+                               volume=True, returnfig=True)
+            st.pyplot(fig2.figure)    # Show the plot in Streamlit
     st.divider()

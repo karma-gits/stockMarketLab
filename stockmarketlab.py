@@ -67,3 +67,9 @@ if selected == "DCFmodel":
     st.header("DCF Lab 📊📈👩‍🔬")
     st.subheader("Discounted Cash Flow Model",divider='rainbow')
     dcfmodelapp.main()
+    
+# disclaimer
+st.markdown("""##### Disclaimer:<br> All content on stockmarketlab.app is intended for educational purposes only. 
+            This includes any Monte Carlo simulations and does not constitute a real trading strategy. 
+            The DCF model provided by this app offers simulations solely for educational use, and the results are not guaranteed. 
+            Users should not interpret these results as investment advice.""",unsafe_allow_html=True)            

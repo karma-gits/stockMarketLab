@@ -133,4 +133,3 @@ def main():
 
         df = pd.DataFrame(data)
         st.dataframe(df,hide_index=True)
-    st.markdown("""#### Disclaimer:<br> - This is a simulation and not a real trading strategy. The results are not guaranteed and should be used for educational purposes only.""",unsafe_allow_html=True)

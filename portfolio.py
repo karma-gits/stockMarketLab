@@ -104,7 +104,7 @@ def main():
         st.plotly_chart(fig1, use_container_width=True)
                
         # plot my holdings line chart
-        st.subheader('My Holdings - YTD Return',divider='rainbow')
+        st.subheader('YTD Return',divider='rainbow')
         myHoldings = df_raw[tickers].copy()
         for col in myHoldings.columns:
             myHoldings[col] = myHoldings[col].apply(lambda x: round(x / myHoldings[col].head(1).values[0],4)-1)*100

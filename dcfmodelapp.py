@@ -2,7 +2,7 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 
-def main():
+def main():  
     # calculate discount rate form beta
     def cal_discountRate(n):
         beta_values = {0: 5.0, 1: 6.0, 1.1: 6.5, 1.2: 7.0, 1.3: 7.5, 1.4: 8.0, 1.5: 8.5, 1.6: 9.0}
@@ -102,7 +102,7 @@ def main():
                             cashFlow = netIncome/1000000
                             st.write(f"**:red[Net Income:](TTM)** ${cashFlow:,.0f}M")
                             if netIncome < 0:
-                                st.error("Net Income is negative! Try Manually")
+                                st.error("Net Income is negative! Try Manually with Positive Value!",icon="⚠️")
                                 return
                         st.write(f"**Total Debt:** ${totalDebt:,.0f}M")
                         st.write(f"**Cash and ST Investment:** ${cashAndSTinvestment:,.0f}M")
@@ -119,11 +119,12 @@ def main():
                     
                     ## Free Cash Flow and Net Income negative
                     if cashFlow < 0:
-                        st.error("Free Cash Flow is negative! Try Net Income instead! or Try Manually!")
+                        st.error("Free Cash Flow is negative! Try Net Income or Manually!",icon="⚠️")
                         return
      
-            except:
-                st.error("Data not found! | Please Enter Manually | No FUNDS/ETFS | Run Again!")    
+            except Exception as e:
+                st.error(f"An unexpected error occurred: {e}",icon="⚠️") 
+                st.error("Please Enter manually!",icon="⚠️",type="warning")
         else:
             st.info("Enter ***Numbers🔢** in Millions | 📋Use: Recent 10K/10Q Statements")
             col1, col2= st.columns(2)
@@ -142,17 +143,21 @@ def main():
         GrowthRateNext20Years = 0
         if auto_parsed_growth:
             option20Years = st.toggle("Project for 20 Years?",value=False)
-            cashFlowGrowthRate5Years = yf.Ticker(ticker).info['trailingPE'] / yf.Ticker(ticker).info['pegRatio']
-            GrowthRateNext10Years = cashFlowGrowthRate5Years /2
-            st.write("Growth Rate Next 5 Years: ",round(cashFlowGrowthRate5Years,2))
-            st.write("Growth Rate 6-10 Years: ",round(GrowthRateNext10Years,2))
-            
-            if option20Years:
-                    GrowthRateNext20Years = max(GrowthRateNext10Years/2,4.0)
-                    period = 20
-                    st.write("Growth Rate After 10 Years: ",round(GrowthRateNext20Years,2))
-            st.write('Calculating for ',period,' Years')
-            st.success("Data parsed successfully!")
+            try:
+                cashFlowGrowthRate5Years = yf.Ticker(ticker).info['trailingPE'] / yf.Ticker(ticker).info['pegRatio']
+                GrowthRateNext10Years = cashFlowGrowthRate5Years /2
+                st.write("Growth Rate Next 5 Years: ",round(cashFlowGrowthRate5Years,2))
+                st.write("Growth Rate 6-10 Years: ",round(GrowthRateNext10Years,2))
+
+                if option20Years:
+                        GrowthRateNext20Years = max(GrowthRateNext10Years/2,4.0)
+                        period = 20
+                        st.write("Growth Rate After 10 Years: ",round(GrowthRateNext20Years,2))
+                st.write('Calculating for ',period,' Years')
+                st.success("Data parsed successfully!")
+            except Exception as e:
+                st.error(f"An unexpected error occurred: {e}",icon="⚠️")
+                st.error("Please Calculate manually!",icon="⚠️",type="warning")
         else:
             st.info("Enter Growth Rates. (from: finviz.com, seekingalpha.com...)")  
             option20Years = st.toggle("Project for 20 Years?",value=False)
@@ -240,14 +245,16 @@ def main():
             df.columns = df.columns.astype(str)
         st.dataframe(df,use_container_width=True)
 
-    with st.expander("View: Financial Statements - Quatrerly (in millions)",icon="📈"):
-        ta1, ta2, ta3 = st.tabs(["Balance Sheet","Income Statement","Cash Flow"])
-        with ta1:
-            financialStatements(yf.Ticker(ticker).quarterly_balance_sheet)
-        with ta2:
-            financialStatements(yf.Ticker(ticker).quarterly_income_stmt)
-        with ta3:
-            financialStatements(yf.Ticker(ticker).quarterly_cashflow)
+    # check is Ticker is entered:
+    if ticker != "":
+        with st.expander("View: Financial Statements - Quaterly (in millions)",icon="📈"):
+            ta1, ta2, ta3 = st.tabs(["Balance Sheet","Income Statement","Cash Flow"])
+            with ta1:
+                financialStatements(yf.Ticker(ticker).quarterly_balance_sheet)
+            with ta2:
+                financialStatements(yf.Ticker(ticker).quarterly_income_stmt)
+            with ta3:
+                financialStatements(yf.Ticker(ticker).quarterly_cashflow)
             
  
     
