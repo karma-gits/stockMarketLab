@@ -49,6 +49,8 @@ def main():
                 emotionAnalysis(whole_text)
             except ValueError as e:
                 st.warning(f"No significant data to analyze: {e}")    
+    ## vader sentiment analysis
+    vader = SentimentIntensityAnalyzer()
     
     # main brain Starts here
     tab1, tab2 = st.tabs(["📰 News Headlines Analysis 📰","Custom Text Analysis"],)
