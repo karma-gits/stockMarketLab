@@ -42,21 +42,19 @@ with st.container():
 if selected == "Portfolio":
     st.header("**My Portfolio** 💰📊📈")
     st.subheader("Dashboard",divider='rainbow')
-    portfolio.main()
+    try:
+        portfolio.main()
+    except Exception as e:
+        st.error(f"An unexpected error occurred: {e}",icon="⚠️")
     
 if selected == "News":
     st.header("**Stock Sentiment Analyzer** 📈")
     st.subheader("News Headlines😀🤬🤯",divider='rainbow')
-
-    #main brain (processes the givin tickers )
-    tickerHolder = str.upper(st.text_input("**Enter a Ticker!**",placeholder="Enter a Ticker Symbol! (*Not for otc stocks)"))
-    st.divider()
     with st.container(border=True):
-        if tickerHolder != "":
-            try:
-                stockapp.main(tickerHolder)
-            except Exception as e:
-                st.error(f"No News Today for your Stock... {e}")
+        try:
+            stockapp.main()
+        except Exception as e:
+            st.error(f"An unexpected error occurred: {e}",icon="⚠️")
     
 if selected == "MonteCarlo":
     st.header("**Simulation Lab** 🧪⚗️👩‍🔬")
@@ -69,7 +67,4 @@ if selected == "DCFmodel":
     dcfmodelapp.main()
     
 # disclaimer
-st.markdown("""##### Disclaimer:<br> All content on stockmarketlab.app is intended for educational purposes only. 
-            This includes any Monte Carlo simulations and does not constitute a real trading strategy. 
-            The DCF model provided by this app offers simulations solely for educational use, and the results are not guaranteed. 
-            Users should not interpret these results as investment advice.""",unsafe_allow_html=True)            
+st.markdown("""<b>Disclaimer: </b>All content on stockmarketlab.app is intended for educational purposes only. This includes any Monte Carlo simulations and does not constitute a real trading strategy. The DCF model provided by this app offers simulations solely for educational use, and the results are not guaranteed. Users should not interpret these results as investment advice.""",unsafe_allow_html=True)            

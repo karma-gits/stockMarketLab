@@ -69,10 +69,10 @@ def main():
             html = BeautifulSoup(response, features='html.parser')
             news_table = html.find(id='news-table')
             if not news_table:
-                st.warning("No news table found on the page.")
+                st.warning("No news table found on the page.",icon="⚠️",type="warning")
 
         except Exception as e:
-            st.error("Please try again! with a valid ticker!",icon="⚠️")
+            st.error("Please try again! with a valid ticker! (Not for OTC stocks)",icon="⚠️")
             st.error(f"Failed to fetch data: {e}")
             
         news_tables[tickerHolder] = news_table
@@ -156,4 +156,3 @@ def main():
                                hlines=dict(hlines=[highs,(highs+lows)/2,lows],colors=['r','gray','g'],linestyle='--'),
                                volume=True, returnfig=True)
             st.pyplot(fig2.figure)    # Show the plot in Streamlit
-    st.divider()
