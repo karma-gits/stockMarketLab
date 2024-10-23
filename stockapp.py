@@ -13,6 +13,7 @@ import streamlit as st
 import datetime as dt
 import plotly.express as px
 import nltk
+import nltk_download
 import corpora
 import textblob
 
