@@ -74,7 +74,7 @@ def main():
             #with col2:
             #    st.metric("YTD Return","{:.1f}%".format(df_asset['ASSETS'].tail(1).values[0]*100), delta="SPY {:.1f}%".format(df_asset['SPY'].tail(1).values[0]*100))
             with col2:
-                st.metric("Daily change","${:.0f}".format(princeChange), delta="{:.2f}%".format(dailyChange))
+                st.metric("Daily Change","${:.0f}".format(princeChange), delta="{:.2f}%".format(dailyChange))
             with col3:
                 st.metric("Top Gain", winnnerDf.head(1).ticker.values[0] ,delta=str(winnnerDf.head(1).chg.values[0])+"%")
             with col4:

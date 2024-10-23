@@ -46,10 +46,10 @@ if selected == "Portfolio":
         portfolio.main()
     except Exception as e:
         st.error(f"An unexpected error occurred: {e}",icon="⚠️")
+        st.warning("Please Refresh the page to try again!",icon="⚠️")
     
 if selected == "News":
-    st.header("**Stock Sentiment Analyzer** 📈")
-    st.subheader("News Headlines😀🤬🤯",divider='rainbow')
+    st.header("**Stock Sentiment Analyzer** 📈😀🤬")
     with st.container(border=True):
         try:
             stockapp.main()
