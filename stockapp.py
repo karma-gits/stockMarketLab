@@ -12,39 +12,88 @@ import mplfinance as mpf
 import streamlit as st
 import datetime as dt
 import plotly.express as px
+import plotly.subplots as sp
 import nltk
-import nltk_download
-import corpora
-import textblob
+import nltk_download # dont delete this
+import corpora # dont delete this
+import textblob # dont delete this
 
 def main():
     def emotionAnalysis(whole_text):
-        #Get the emotion frequencies
+        # Get emotion frequencies
         emotions = NRCLex(whole_text).affect_frequencies
-        #Filter and plot the non-zero emotions in one step
-        y=[k for k, v in emotions.items() if v != 0]
-        x=[v for k, v in emotions.items() if v != 0]
-        df =pd.DataFrame({'Emotions':y,'Intensity':x})
-        fig1 = px.bar(df.sort_values(by='Intensity',ascending=False),y='Intensity',x='Emotions',color='Emotions')
-        fig1.update(layout_showlegend=False)
-        fig1.update_layout(height=380,title='Emotion Analysis',xaxis_title='')
-        st.plotly_chart(fig1,use_container_width=True)    
+        # Define positive and negative emotion categories
+        positive_emotions = ['joy', 'trust', 'anticipation', 'surprise']
+        negative_emotions = ['anger', 'disgust', 'fear', 'sadness']
+
+        # Calculate compound score
+        positive_score = sum([emotions.get(emotion, 0) for emotion in positive_emotions])
+        negative_score = sum([emotions.get(emotion, 0) for emotion in negative_emotions])
+        compound_value = positive_score - negative_score
+
+        # Prepare data for emotions plot
+        y = [k for k, v in emotions.items() if v != 0]
+        x = [v for k, v in emotions.items() if v != 0]
+        df = pd.DataFrame({'Emotions': y, 'Intensity': x})
+
+        # Create subplots
+        fig = sp.make_subplots(rows=2, cols=1, subplot_titles=('Emotions', 'Overall Score'),
+                               row_heights=[0.85, 0.15])
+
+        # Top plot for emotion frequencies
+        emotion_fig = px.bar(df.sort_values(by='Intensity', ascending=False), x='Emotions', y='Intensity', color='Emotions')
+        emotion_fig.update_traces(width=.8)  # Making the bars thicker (where 1 is full width and 0 is no width)
+        for trace in emotion_fig.data:
+            fig.add_trace(trace, row=1, col=1)
+
+        # Bottom plot for compound score
+        compound_color = '#2a9d8f' if compound_value > 0 else '#e63946'
+        compound_fig = px.bar(x=[compound_value], color_discrete_sequence=[compound_color])
+        for trace in compound_fig.data:
+            fig.add_trace(trace, row=2, col=1)
+
+        # Update layout
+        fig.update_layout(width=800, height=500,margin=dict(t=50, b=80), showlegend=False)#
+        # Set x-axis limits for the compound score plot
+        fig.update_xaxes(range=[-1, 1], row=2, col=1)  # Set x-axis limits from -1 to 1
+        # Hide y-axis label and y-tick labels for compound score
+        fig.update_yaxes(title_text='', row=2, col=1)  # Hide y-axis label
+        fig.update_yaxes(showticklabels=False, row=2, col=1)  # Remove y-tick labels
+        # Use Streamlit to display the plot
+        st.plotly_chart(fig, use_container_width=True)
+        
+    #def emotionAnalysis(whole_text):
+    #    #Get the emotion frequencies
+    #    emotions = NRCLex(whole_text).affect_frequencies
+    #    #Filter and plot the non-zero emotions in one step
+    #    y=[k for k, v in emotions.items() if v != 0]
+    #    x=[v for k, v in emotions.items() if v != 0]
+    #    df =pd.DataFrame({'Emotions':y,'Intensity':x})
+    #    fig1 = px.bar(df.sort_values(by='Intensity',ascending=False),y='Intensity',x='Emotions',color='Emotions')
+    #    fig1.update(layout_showlegend=False)
+    #    fig1.update_layout(height=380,title={'text': 'Overall Emotion Analysis', 'x': 0.5, 'xanchor': 'center'},xaxis_title='')
+    #    st.plotly_chart(fig1,use_container_width=True)    
     def wordCloud(whole_text,topWords=100):
         # Word Cloud
-        stopwords = set(STOPWORDS)
-        wc = WordCloud(stopwords=stopwords,colormap='tab20c', max_words=topWords,width=800,height=700).generate(whole_text).to_image()
+        stopword = set(STOPWORDS)    
+        wc = WordCloud(stopwords=stopword,colormap='tab20c', max_words=topWords,width=800,height=850,margin=1).generate(whole_text).to_image()
+        #st.image(wc, use_column_width=True)
         fig = px.imshow(wc)
-        fig.update_layout(height=410,title='Most Mentioned',xaxis_visible=False,yaxis_visible=False)
-        st.plotly_chart(fig)
+        fig.update_layout(width=800, height=500,xaxis_visible=False,yaxis_visible=False)#
+        st.plotly_chart(fig,use_container_width=True)
+        
     # overallAnalysis = emotionAnalysis + wordCloud
-    def overallAnalysis(whole_text,topWords=100):
-        col1, col2 = st.columns(2)
+    def overallAnalysis(whole_text,topWords=70):
+        col1, col2 = st.columns(2,gap="small",vertical_alignment="center")
         with col1:
+            # display title with center alignment
+            st.markdown("<h5 style='text-align: center;'>Most Mentioned</h5>",unsafe_allow_html=True)
             try:
                 wordCloud(whole_text,topWords)
             except ValueError as e:
                 st.warning(f"No significant data to analyze: {e}")   
         with col2:
+            st.markdown("<h5 style='text-align: center;'>Emotion Analysis</h5>",unsafe_allow_html=True)
             try:
                 emotionAnalysis(whole_text)
             except ValueError as e:
@@ -53,7 +102,7 @@ def main():
     vader = SentimentIntensityAnalyzer()
     
     # main brain Starts here
-    tab1, tab2 = st.tabs(["📰 News Headlines Analysis 📰","Custom Text Analysis"],)
+    tab1, tab2 = st.tabs(["📰 News Headlines Analysis","📰 Custom Text Analysis"])
     with tab2:
         # Custom Text Analysis
         st.subheader(f":red[ Custom Text Sentiment Analysis 😀😈]",divider='rainbow')
@@ -95,27 +144,25 @@ def main():
                         time = date_data[1]
                     parsed_data.append([ticker, date, time, title])
             df = pd.DataFrame(parsed_data, columns=['ticker', 'date', 'time', 'Headline'])
-            if df.empty:
-                st.warning("No News Today for your Stock... Looks like you are missing some required data for this feature.")
-            else:
-                df = df[df['date']=='Today'] #filter for current 'Today' data
-                df['time'] = pd.to_datetime(df.time).dt.time ## convert to corrct time format    
-                if df.empty:
-                    st.warning(f"{tickerHolder} - No Major News available for today.",icon="⚠️")
             
-            df['VaderSentiment'] = df['Headline'].apply(lambda title: vader.polarity_scores(title)['compound'])
-            ## new columns with emoji 
-            df['Sentiment'] = df['VaderSentiment'].apply(lambda x: "😀😀" if x > .4 else "🙂🙂" if x > .1 else "🙂" if x > .05 else "❔" if x > -.05 else "😡" if x>-.4 else "😡😡")
-
-            if not df.empty:
+            df = df[df['date']=='Today'] #filter for current 'Today' data
+            df['time'] = pd.to_datetime(df.time).dt.time ## convert to corrct time format    
+            
+            if df.empty:
+                st.warning(f"{tickerHolder} - No Major News available for today.",icon="⚠️")
+            else:
+                #apply vader sentiment to the headline
+                df['VaderSentiment'] = df['Headline'].apply(lambda title: vader.polarity_scores(title)['compound'])
+                ## new columns with emoji 
+                df['Sentiment'] = df['VaderSentiment'].apply(lambda x: "😀😀" if x > .4 else "🙂🙂" if x > .1 else "🙂" if x > .05 else "❔" if x > -.05 else "😡" if x>-.4 else "😡😡")
                 ### News headlines
-                st.subheader(f':red[📰 News Headlines 📰-] {tickerHolder} | {dt.datetime.now().date()}',divider='red')
+                st.subheader(f":red[📰Today's Headlines for '{tickerHolder}'] | {dt.datetime.now().date()}",divider='red')
                 #st.dataframe(df[['time','Headline','Emoji']].set_index('time'),use_container_width=True) #prints tickers dataframe
                 with st.container(height=450,border=True):
                     st.table(df[['time','Headline','Sentiment']].set_index('time')) #prints tickers dataframe
 
                 # Analyze Headlines
-                st.subheader(':red[📰 Overall Headlines Analysis 😀😈]',divider='red')
+                st.subheader(':red[📰Overall Headlines Analysis 😀😈]',divider='red')
                 # Overall News Emotional Analysis
                 # Concatenate all rows from the Headline column
                 whole_text = df['Headline'].str.cat(sep='. ')
@@ -123,21 +170,17 @@ def main():
                     overallAnalysis(whole_text)
                 except Exception as e:
                      st.error(f"An unexpected error occurred: {e}",icon="⚠️")
-            else:
-                st.error(f"{tickerHolder} - No News Headlines available to analyze.",icon="⚠️")
 
             # Stock data from Yahoo Finance
-            st.subheader(f":red[ 📈 {tickerHolder} - YTD Daily Chart 📉 ]",divider='red')
+            st.subheader(f":red[📉{tickerHolder}] - 6 Months Daily Chart",divider='red')
             security = yf.Ticker(tickerHolder)
-            data  = security.history(period='ytd',interval='1d')
+            # display 6 months of data
+            data  = security.history(period='6mo',interval='1d') #ytd
             data  = data [['Open', 'High', 'Low', 'Close', 'Volume']]
             highs = data['High'][:-1].max()
             lows = data['Low'][:-1].min()
             # Plot the candlestick chart
-            #fig2,ax1 = mpf.plot(data, type='candle',style='charles', mav=(10,20,50), 
-            #                   hlines=dict(hlines=[highs,(highs+lows)/2,lows],colors=['g','gray','r'],linestyle='--'),
-            #                   volume=True, returnfig=True)
             fig2,ax1 = mpf.plot(data, type='candle',style='yahoo', mav=(10,20,50), 
-                               hlines=dict(hlines=[highs,(highs+lows)/2,lows],colors=['r','gray','g'],linestyle='--'),
+                               hlines=dict(hlines=[highs,(highs+lows)/2,lows],colors=['r','gray','g'],linestyle=['-','--','-']),
                                volume=True, returnfig=True)
-            st.pyplot(fig2.figure,use_container_width=True)    # Show the plot in Streamlit
+            st.pyplot(fig2.figure,use_container_width=True)    # Show the plot in Streamlit 

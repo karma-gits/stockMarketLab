@@ -49,7 +49,7 @@ if selected == "Portfolio":
         st.warning("Please Refresh the page to try again!",icon="⚠️")
     
 if selected == "News":
-    st.header("**Stock Sentiment Analyzer** 📈😀🤬")
+    st.header("**Sentiment Analyzer** 📈😀🤬")
     with st.container(border=True):
         try:
             stockapp.main()
