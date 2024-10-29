@@ -19,9 +19,10 @@ import corpora # dont delete this
 import textblob # dont delete this
 
 def main():
+    # EmotionAnalysis
     def emotionAnalysis(whole_text):
         # Get emotion frequencies
-        emotions = NRCLex(whole_text).affect_frequencies
+        emotions = NRCLex(whole_text.lower()).affect_frequencies
         # Define positive and negative emotion categories
         positive_emotions = ['joy', 'trust', 'anticipation', 'surprise']
         negative_emotions = ['anger', 'disgust', 'fear', 'sadness']
@@ -61,18 +62,7 @@ def main():
         fig.update_yaxes(showticklabels=False, row=2, col=1)  # Remove y-tick labels
         # Use Streamlit to display the plot
         st.plotly_chart(fig, use_container_width=True)
-        
-    #def emotionAnalysis(whole_text):
-    #    #Get the emotion frequencies
-    #    emotions = NRCLex(whole_text).affect_frequencies
-    #    #Filter and plot the non-zero emotions in one step
-    #    y=[k for k, v in emotions.items() if v != 0]
-    #    x=[v for k, v in emotions.items() if v != 0]
-    #    df =pd.DataFrame({'Emotions':y,'Intensity':x})
-    #    fig1 = px.bar(df.sort_values(by='Intensity',ascending=False),y='Intensity',x='Emotions',color='Emotions')
-    #    fig1.update(layout_showlegend=False)
-    #    fig1.update_layout(height=380,title={'text': 'Overall Emotion Analysis', 'x': 0.5, 'xanchor': 'center'},xaxis_title='')
-    #    st.plotly_chart(fig1,use_container_width=True)    
+    # WordCloud
     def wordCloud(whole_text,topWords=100):
         # Word Cloud
         stopword = set(STOPWORDS)    
@@ -151,8 +141,8 @@ def main():
             if df.empty:
                 st.warning(f"{tickerHolder} - No Major News available for today.",icon="⚠️")
             else:
-                #apply vader sentiment to the headline
-                df['VaderSentiment'] = df['Headline'].apply(lambda title: vader.polarity_scores(title)['compound'])
+                #apply vader sentiment to the headline and aplot apply lower()
+                df['VaderSentiment'] = df['Headline'].apply(lambda title: vader.polarity_scores(title.lower())['compound'])
                 ## new columns with emoji 
                 df['Sentiment'] = df['VaderSentiment'].apply(lambda x: "😀😀" if x > .4 else "🙂🙂" if x > .1 else "🙂" if x > .05 else "❔" if x > -.05 else "😡" if x>-.4 else "😡😡")
                 ### News headlines
@@ -183,4 +173,4 @@ def main():
             fig2,ax1 = mpf.plot(data, type='candle',style='yahoo', mav=(10,20,50), 
                                hlines=dict(hlines=[highs,(highs+lows)/2,lows],colors=['r','gray','g'],linestyle=['-','--','-']),
                                volume=True, returnfig=True)
-            st.pyplot(fig2.figure,use_container_width=True)    # Show the plot in Streamlit 
+            st.pyplot(fig2.figure,use_container_width=True)    # Show the plot in Streamlit    
