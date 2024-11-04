@@ -44,15 +44,17 @@ def main():
     def autoData(ticker):
         security = yf.Ticker(ticker)
         stockFCF = pd.DataFrame(security.quarterly_cashflow)
-        
         freeCF= stockFCF[stockFCF.columns[0:4]].loc['Free Cash Flow'].sum() #TTM Free Cash Flow
         
         stockBAL = pd.DataFrame(security.quarterly_balance_sheet)
         totalCash = stockBAL[stockBAL.columns[0:1]].loc['Cash Cash Equivalents And Short Term Investments'].values[0]
         
-        shortTerm = stockBAL[stockBAL.columns[0:1]].loc['Current Debt And Capital Lease Obligation'].values[0] 
-        longTerm = stockBAL[stockBAL.columns[0:1]].loc['Long Term Debt And Capital Lease Obligation'].values[0]
-        totalDebt = shortTerm + longTerm
+        try:
+            shortTerm = stockBAL[stockBAL.columns[0:1]].loc['Current Debt And Capital Lease Obligation'].values[0] 
+            longTerm = stockBAL[stockBAL.columns[0:1]].loc['Long Term Debt And Capital Lease Obligation'].values[0]
+            totalDebt = shortTerm + longTerm
+        except:
+            totalDebt =  stockBAL[stockBAL.columns[0:1]].loc['Total Debt'].values[0]
         
         stockNetincome = pd.DataFrame(security.quarterly_income_stmt)
         netIncome = stockNetincome[stockNetincome.columns[0:4]].loc['Net Income From Continuing And Discontinued Operation'].sum()
