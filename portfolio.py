@@ -34,7 +34,6 @@ def main():
     #calculate returns
     df['return'] = df.close/df.entry-1
     df = round(df,2) # rounding to 2 decimal places
-
     
     mylist = df['ticker'].unique().tolist()
     tickers = mylist+['SPY']
@@ -45,14 +44,23 @@ def main():
     totalValue = totalValue.sum()
     netValue = totalValue - totalCost
     # daily prince change
-    princeChange = df['priceChange']*df['shares']
-    princeChange = princeChange.sum()
+    priceChange = df['priceChange']*df['shares']
+    priceChange = priceChange.sum()
     # daily change
-    dailyChange = princeChange/totalValue*100
-    ## filteer chnage positive sort by chg
-    winnnerDf = round(df.sort_values(by='chg',ascending=False),1)[df.chg>0]
+    dailyChange = priceChange/totalValue*100
+    ## filteer change positive sort by chg but if rows are none then add none to the list
+    #winnerDf = round(df.sort_values(by='chg',ascending=False),2)[df.chg>0]
+    if df[df.chg > 0].empty:
+        winnerDf = pd.DataFrame(columns=df.columns)
+        winnerDf = winnerDf.append(pd.Series([None] * len(df.columns), index=df.columns), ignore_index=True)
+    else:
+        winnerDf = round(df.sort_values(by='chg', ascending=False), 2)[df.chg > 0]
     # filter chnage negative sort by chg
-    losserDf = round(df.sort_values(by='chg'),1)[df.chg<0]
+    if df[df.chg < 0].empty:
+        losserDf = pd.DataFrame(columns=df.columns)
+        losserDf = losserDf.append(pd.Series([None] * len(df.columns), index=df.columns), ignore_index=True)
+    else:
+        losserDf = round(df.sort_values(by='chg'), 2)[df.chg < 0]
     
     ###
     dataset = {}
@@ -73,22 +81,22 @@ def main():
             with col1:
                 st.metric("Total Return","${:,.0f}".format(netValue),delta="{:,.2f}%".format((netValue/totalCost)*100))
             with col2:
-                st.metric("Daily change","${:.0f}".format(princeChange), delta="{:.2f}%".format(dailyChange))
+                st.metric("Daily change","${:.0f}".format(priceChange), delta="{:.2f}%".format(dailyChange))
             with col3:
-                st.metric("Top Gain", winnnerDf.head(1).ticker.values[0] ,delta=str(winnnerDf.head(1).chg.values[0])+"%")
+                st.metric("Top Gain", winnerDf.head(1).ticker.values[0] ,delta=str(winnerDf.head(1).chg.values[0] if winnerDf.head(1).chg.values[0] else 0)+"%")
             with col4:
-                st.metric("Top Loss", losserDf.head(1).ticker.values[0] ,delta=str(losserDf.head(1).chg.values[0])+"%")
+                st.metric("Top Loss", losserDf.head(1).ticker.values[0] ,delta=str(losserDf.head(1).chg.values[0] if losserDf.head(1).chg.values[0] else 0)+"%")
         ## winner and loser
         with st.container(border=True):
             col1, col2 = st.columns(2)
             with col1:
                 st.subheader(":green[Gainers:] ",divider='green')
-                top5 = [f"{row['ticker']}: {row['chg']}%" for index, row in winnnerDf.head(3).iterrows()]
-                st.write(f":green[{top5}]")
+                top5 = [f"{row['ticker']}: {row['chg']}%" for index, row in winnerDf.head(3).iterrows()]
+                st.write(f":green[{top5 if winnerDf.head(1).chg.values[0] else 'No Gainers'}]")
             with col2:
                 st.subheader(f":red[Losers:] ",divider='red')
                 bottom5 = [f"{row['ticker']}: {row['chg']}%" for index, row in losserDf.sort_values(by='chg').head(3).iterrows()]
-                st.write(f":red[{bottom5}]")
+                st.write(f":red[{bottom5 if losserDf.head(1).chg.values[0] else 'No Losers'}]")
         ## Portfolio to Benchmark
         with st.container(border=True):
             st.subheader(f'**YTD: :blue[Portfolio] ({round(df_asset.ASSETS.iloc[-1]*100,1)}%) :blue[vs] :gray[SPY] ({round(df_asset.SPY.iloc[-1]*100,1)}%)**',divider=True)
@@ -110,6 +118,7 @@ def main():
                 myHoldings[col] = myHoldings[col].apply(lambda x: round(x / myHoldings[col].head(1).values[0],4)-1)*100
             #st.dataframe(myHoldings)
             st.line_chart(myHoldings)        
+        
         ## my holdings table
         with st.expander(":blue[View Positions by Daily Change %]",icon="🚨"):
             st.subheader('Positions by Daily Change %',divider=True)
