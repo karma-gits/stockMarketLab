@@ -91,12 +91,30 @@ def main():
             col1, col2 = st.columns(2)
             with col1:
                 st.subheader(":green[Gainers:] ",divider='green')
-                top5 = [f"{row['ticker']}: {row['chg']}%" for index, row in winnerDf.head(3).iterrows()]
-                st.write(f":green[{top5 if winnerDf.head(1).chg.values[0] else 'No Gainers'}]")
+                top5 = [f"{row['ticker']}: {row['chg']}%" for index, row in winnerDf.iterrows()]
+                toplist = top5 if winnerDf.head(1).chg.values[0] else None
+                if len(top5) > 2:
+                    st.markdown(f"""
+                            <div style="overflow:hidden; white-space:nowrap;">
+                            <marquee behavior="scroll" direction="left" style="color: green;">
+                            {toplist}</marquee>
+                            </div>
+                            """, unsafe_allow_html=True)
+                else:
+                    st.write(f":green[{toplist}]")
             with col2:
                 st.subheader(f":red[Losers:] ",divider='red')
-                bottom5 = [f"{row['ticker']}: {row['chg']}%" for index, row in losserDf.sort_values(by='chg').head(3).iterrows()]
-                st.write(f":red[{bottom5 if losserDf.head(1).chg.values[0] else 'No Losers'}]")
+                bottom5 = [f"{row['ticker']}: {row['chg']}%" for index, row in losserDf.sort_values(by='chg').iterrows()]
+                bottomlist = bottom5 if losserDf.head(1).chg.values[0] else None
+                if len(bottom5) > 2:
+                    st.markdown(f"""
+                            <div style="overflow:hidden; white-space:nowrap;">
+                            <marquee behavior="scroll" direction="left" style="color: lightred;">
+                            {bottomlist}</marquee>
+                            </div>
+                            """, unsafe_allow_html=True)
+                else:
+                    st.write(f":red[{bottomlist}]")
         ## Portfolio to Benchmark
         with st.container(border=True):
             st.subheader(f'**YTD: :blue[Portfolio] ({round(df_asset.ASSETS.iloc[-1]*100,1)}%) :blue[vs] :gray[SPY] ({round(df_asset.SPY.iloc[-1]*100,1)}%)**',divider=True)
