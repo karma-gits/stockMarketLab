@@ -109,7 +109,7 @@ def main():
                 if len(bottom5) > 2:
                     st.markdown(f"""
                             <div style="overflow:hidden; white-space:nowrap;">
-                            <marquee behavior="scroll" direction="left" style="color: lightred;">
+                            <marquee behavior="scroll" direction="left" style="color: red;">
                             {bottomlist}</marquee>
                             </div>
                             """, unsafe_allow_html=True)
